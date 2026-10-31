@@ -31,9 +31,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 return
-            has_cookies = bool(os.environ.get('YOUTUBE_COOKIES', '').strip())
-            cookie_len = len(os.environ.get('YOUTUBE_COOKIES', '').strip())
-            return connect.reply(self, 200, {'ok': True, 'service': 'aleztesia-music', 'version': '0.7.6', 'has_cookies': has_cookies, 'cookie_len': cookie_len})
+            has_cookies = os.path.exists('/etc/secrets/cookies.txt') or bool(os.environ.get('YOUTUBE_COOKIES', '').strip())
+            cookie_len = os.path.getsize('/etc/secrets/cookies.txt') if os.path.exists('/etc/secrets/cookies.txt') else len(os.environ.get('YOUTUBE_COOKIES', '').strip())
+            return connect.reply(self, 200, {'ok': True, 'service': 'aleztesia-music', 'version': '0.7.7', 'has_cookies': has_cookies, 'cookie_len': cookie_len})
         if not path.startswith('/api/music/'):
             return connect.reply(self, 404, {})
         if not path.startswith('/api/music/stream/'):

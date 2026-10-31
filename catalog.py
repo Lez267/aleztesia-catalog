@@ -106,18 +106,21 @@ def _resolve_uncached(identifier):
         'js_runtimes':{'node':{}},
         'remote_components':{'ejs:github'}}
     import os, base64
-    cookies_data = os.environ.get('YOUTUBE_COOKIES', '').strip()
-    if cookies_data:
-        try:
-            if not cookies_data.startswith('# Netscape'):
-                decoded = base64.b64decode(cookies_data).decode('utf-8', errors='ignore')
-                if 'youtube.com' in decoded or '# Netscape' in decoded: cookies_data = decoded
-        except Exception: pass
-        cookie_path = '/tmp/youtube_cookies.txt'
-        try:
-            with open(cookie_path, 'w') as f: f.write(cookies_data)
-            options['cookiefile'] = cookie_path
-        except Exception: pass
+    if os.path.exists('/etc/secrets/cookies.txt'):
+        options['cookiefile'] = '/etc/secrets/cookies.txt'
+    else:
+        cookies_data = os.environ.get('YOUTUBE_COOKIES', '').strip()
+        if cookies_data:
+            try:
+                if not cookies_data.startswith('# Netscape'):
+                    decoded = base64.b64decode(cookies_data).decode('utf-8', errors='ignore')
+                    if 'youtube.com' in decoded or '# Netscape' in decoded: cookies_data = decoded
+            except Exception: pass
+            cookie_path = '/tmp/youtube_cookies.txt'
+            try:
+                with open(cookie_path, 'w') as f: f.write(cookies_data)
+                options['cookiefile'] = cookie_path
+            except Exception: pass
     with YoutubeDL(options) as downloader:
         result = downloader.extract_info('https://www.youtube.com/watch?v=' + identifier, download=False)
     url = result.get('url', '')
