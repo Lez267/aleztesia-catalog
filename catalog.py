@@ -101,7 +101,7 @@ def _resolve_uncached(identifier):
     from yt_dlp import YoutubeDL
     options={'format':'bestaudio/best','noplaylist':True,'skip_download':True,'quiet':False,
         'logger':QuietLog(),'socket_timeout':15,'retries':2,'extractor_retries':2,'cachedir':False,
-        'source_address':'0.0.0.0',
+        'ignore_no_formats_error':True,
         'extractor_args':{'youtube':{'player_client':['tv','web_embedded','android','web']}},
         'js_runtimes':{'node':{}},
         'remote_components':{'ejs:github'}}
@@ -118,25 +118,28 @@ def _resolve_uncached(identifier):
             with open(cookie_path, 'w') as f: f.write(cookies_data)
             options['cookiefile'] = cookie_path
         except Exception: pass
-    try:
-        with YoutubeDL(options) as downloader:
-            result = downloader.extract_info('https://www.youtube.com/watch?v=' + identifier, download=False)
-    except Exception as e:
-        if 'Requested format is not available' in str(e) or 'format is not available' in str(e):
-            fallback_opts = dict(options)
-            fallback_opts.pop('format', None)
-            with YoutubeDL(fallback_opts) as downloader:
-                info = downloader.extract_info('https://www.youtube.com/watch?v=' + identifier, download=False)
-                audio_formats = [f for f in info.get('formats', []) if f.get('url') and (f.get('acodec') != 'none' or f.get('vcodec') == 'none')]
-                if not audio_formats:
-                    audio_formats = [f for f in info.get('formats', []) if f.get('url')]
-                if not audio_formats:
-                    raise ValueError(f"Proveedor no entregó flujos de audio reproducibles ({len(info.get('formats', []))} formatos inspeccionados).")
-                best = max(audio_formats, key=lambda f: (f.get('abr') or 0, f.get('tbr') or 0))
-                result = {**info, 'url': best['url']}
+    with YoutubeDL(options) as downloader:
+        result = downloader.extract_info('https://www.youtube.com/watch?v=' + identifier, download=False)
+    url = result.get('url', '')
+    if not url:
+        formats = result.get('formats', [])
+        # Prioritize direct HTTPS audio formats
+        audio_candidates = [
+            f for f in formats
+            if f.get('url') and f.get('protocol') in ('https', 'http') and (f.get('acodec') != 'none' or f.get('vcodec') == 'none')
+        ]
+        if not audio_candidates:
+            # Fallback to any direct HTTPS format with audio
+            audio_candidates = [f for f in formats if f.get('url') and f.get('protocol') in ('https', 'http') and f.get('acodec') != 'none']
+        if not audio_candidates:
+            # Any direct format
+            audio_candidates = [f for f in formats if f.get('url') and f.get('protocol') in ('https', 'http')]
+        if audio_candidates:
+            best = max(audio_candidates, key=lambda f: (f.get('abr') or 0, f.get('tbr') or 0))
+            url = best.get('url', '')
         else:
-            raise
-    url=result.get('url','')
+            fmt_summary = [{'id': f.get('format_id'), 'ext': f.get('ext'), 'proto': f.get('protocol'), 'has_url': bool(f.get('url'))} for f in formats[:10]]
+            raise ValueError(f"Sin formatos directos ({len(formats)} encontrados): {fmt_summary}")
     if not safe_media_url(url):raise ValueError('El proveedor no entregó una fuente de audio compatible.')
     token=secrets.token_urlsafe(32)
     with LOCK:

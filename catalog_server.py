@@ -31,7 +31,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 return
-            return connect.reply(self, 200, {'ok': True, 'service': 'aleztesia-music', 'version': '0.7.4', 'commit': 'player-clients'})
+            return connect.reply(self, 200, {'ok': True, 'service': 'aleztesia-music', 'version': '0.7.5', 'commit': 'direct-audio-selection'})
         if not path.startswith('/api/music/'):
             return connect.reply(self, 404, {})
         if not path.startswith('/api/music/stream/'):
