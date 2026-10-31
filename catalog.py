@@ -230,6 +230,7 @@ def _lyric_document_uncached(url):
                 from urllib.parse import urljoin
                 url=urljoin(url,response.headers.get('Location',''));continue
             if response.status_code==404:return None
+            if response.status_code in (401, 403, 429, 500, 502, 503, 504):return None
             response.raise_for_status();body=bytearray()
             for chunk in response.iter_content(65536):
                 body.extend(chunk)
