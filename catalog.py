@@ -116,7 +116,24 @@ def _resolve_uncached(identifier):
             with open(cookie_path, 'w') as f: f.write(cookies_data)
             options['cookiefile'] = cookie_path
         except Exception: pass
-    with YoutubeDL(options) as downloader:result=downloader.extract_info('https://www.youtube.com/watch?v='+identifier,download=False)
+    try:
+        with YoutubeDL(options) as downloader:
+            result = downloader.extract_info('https://www.youtube.com/watch?v=' + identifier, download=False)
+    except Exception as e:
+        if 'Requested format is not available' in str(e):
+            fallback_opts = dict(options)
+            fallback_opts.pop('format', None)
+            with YoutubeDL(fallback_opts) as downloader:
+                info = downloader.extract_info('https://www.youtube.com/watch?v=' + identifier, download=False)
+                audio_formats = [f for f in info.get('formats', []) if f.get('url') and (f.get('acodec') != 'none' or f.get('vcodec') == 'none')]
+                if not audio_formats:
+                    audio_formats = [f for f in info.get('formats', []) if f.get('url')]
+                if not audio_formats:
+                    raise
+                best = max(audio_formats, key=lambda f: (f.get('abr') or 0, f.get('tbr') or 0))
+                result = {**info, 'url': best['url']}
+        else:
+            raise
     url=result.get('url','')
     if not safe_media_url(url):raise ValueError('El proveedor no entregó una fuente de audio compatible.')
     token=secrets.token_urlsafe(32)

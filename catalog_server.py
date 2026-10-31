@@ -20,12 +20,18 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Expose-Headers', 'Content-Range, Content-Length, Accept-Ranges')
         super().end_headers()
     def do_OPTIONS(self): self.send_response(204); self.end_headers()
+    def do_HEAD(self): self.route()
     def do_GET(self): self.route()
     def do_POST(self): self.route()
     def route(self):
         path = urlsplit(self.path).path
-        if self.command == 'GET' and path == '/healthz':
-            return connect.reply(self, 200, {'ok': True, 'service': 'aleztesia-music'})
+        if self.command in ('GET', 'HEAD') and path == '/healthz':
+            if self.command == 'HEAD':
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                return
+            return connect.reply(self, 200, {'ok': True, 'service': 'aleztesia-music', 'version': '0.7.3', 'commit': '0311c8a'})
         if not path.startswith('/api/music/'):
             return connect.reply(self, 404, {})
         if not path.startswith('/api/music/stream/'):
