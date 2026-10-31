@@ -85,8 +85,8 @@ def items(values):return [v for row in values if (v:=normalize(row))]
 
 class QuietLog:
     def debug(self,*args):pass
-    def warning(self,*args):pass
-    def error(self,*args):pass
+    def warning(self,*args):print('[yt-dlp-warn]',*args)
+    def error(self,*args):print('[yt-dlp-error]',*args)
 
 def safe_media_url(url):
     parsed=urlsplit(url)
@@ -99,9 +99,10 @@ def resolve(identifier):
 def _resolve_uncached(identifier):
     if not VIDEO.fullmatch(identifier):raise ValueError('Canción inválida.')
     from yt_dlp import YoutubeDL
-    options={'format':'bestaudio[ext=m4a]/bestaudio','noplaylist':True,'skip_download':True,'quiet':True,
-        'logger':QuietLog(),'socket_timeout':12,'retries':1,'extractor_retries':1,'cachedir':False,
-        'js_runtimes':{'node':{}},'remote_components':set()}
+    options={'format':'bestaudio[ext=m4a]/bestaudio','noplaylist':True,'skip_download':True,'quiet':False,
+        'logger':QuietLog(),'socket_timeout':15,'retries':2,'extractor_retries':2,'cachedir':False,
+        'extractor_args':{'youtube':{'player_client':['android','ios','web']}},
+        'remote_components':set()}
     with YoutubeDL(options) as downloader:result=downloader.extract_info('https://www.youtube.com/watch?v='+identifier,download=False)
     url=result.get('url','')
     if not safe_media_url(url):raise ValueError('El proveedor no entregó una fuente de audio compatible.')
@@ -248,4 +249,6 @@ def http(handler):
     except (BrokenPipeError,ConnectionResetError):return
     except ValueError as error:return connect.reply(handler,422,{'message':str(error)})
     except ImportError:return connect.reply(handler,503,{'message':'El servicio de música no está configurado.'})
-    except Exception:return connect.reply(handler,502,{'message':'No se pudo consultar el proveedor. Revisa internet o vuelve a intentar.'})
+    except Exception as error:
+        import traceback; traceback.print_exc()
+        return connect.reply(handler,502,{'message':f'No se pudo consultar el proveedor ({error}).'})
