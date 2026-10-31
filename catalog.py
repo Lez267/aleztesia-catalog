@@ -101,6 +101,8 @@ def _resolve_uncached(identifier):
     from yt_dlp import YoutubeDL
     options={'format':'bestaudio/best','noplaylist':True,'skip_download':True,'quiet':False,
         'logger':QuietLog(),'socket_timeout':15,'retries':2,'extractor_retries':2,'cachedir':False,
+        'source_address':'0.0.0.0',
+        'extractor_args':{'youtube':{'player_client':['tv','web_embedded','android','web']}},
         'js_runtimes':{'node':{}},
         'remote_components':{'ejs:github'}}
     import os, base64
@@ -120,7 +122,7 @@ def _resolve_uncached(identifier):
         with YoutubeDL(options) as downloader:
             result = downloader.extract_info('https://www.youtube.com/watch?v=' + identifier, download=False)
     except Exception as e:
-        if 'Requested format is not available' in str(e):
+        if 'Requested format is not available' in str(e) or 'format is not available' in str(e):
             fallback_opts = dict(options)
             fallback_opts.pop('format', None)
             with YoutubeDL(fallback_opts) as downloader:
@@ -129,7 +131,7 @@ def _resolve_uncached(identifier):
                 if not audio_formats:
                     audio_formats = [f for f in info.get('formats', []) if f.get('url')]
                 if not audio_formats:
-                    raise
+                    raise ValueError(f"Proveedor no entregó flujos de audio reproducibles ({len(info.get('formats', []))} formatos inspeccionados).")
                 best = max(audio_formats, key=lambda f: (f.get('abr') or 0, f.get('tbr') or 0))
                 result = {**info, 'url': best['url']}
         else:
