@@ -100,9 +100,10 @@ def _resolve_uncached(identifier):
     if not VIDEO.fullmatch(identifier):raise ValueError('Canción inválida.')
     from yt_dlp import YoutubeDL
     options={'format':'bestaudio/best','noplaylist':True,'skip_download':True,'quiet':False,
-        'logger':QuietLog(),'socket_timeout':15,'retries':2,'extractor_retries':2,'cachedir':False,
+        'logger':QuietLog(),'socket_timeout':15,'retries':2,'extractor_retries':2,
+        'cachedir':'/tmp/ytdlp_cache',
         'ignore_no_formats_error':True,
-        'extractor_args':{'youtube':{'player_client':['tv','web_embedded','web']}},
+        'extractor_args':{'youtube':{'player_client':['tv_samsung','web']}},
         'js_runtimes':{'node':{}},
         'remote_components':{'ejs:github'}}
     import os, base64
