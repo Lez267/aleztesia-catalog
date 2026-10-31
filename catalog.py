@@ -99,10 +99,10 @@ def resolve(identifier):
 def _resolve_uncached(identifier):
     if not VIDEO.fullmatch(identifier):raise ValueError('Canción inválida.')
     from yt_dlp import YoutubeDL
-    options={'format':'bestaudio[ext=m4a]/bestaudio','noplaylist':True,'skip_download':True,'quiet':False,
+    options={'format':'bestaudio/best','noplaylist':True,'skip_download':True,'quiet':False,
         'logger':QuietLog(),'socket_timeout':15,'retries':2,'extractor_retries':2,'cachedir':False,
-        'extractor_args':{'youtube':{'player_client':['android','ios','web']}},
-        'remote_components':set()}
+        'js_runtimes':{'node':{}},
+        'remote_components':{'ejs:github'}}
     import os, base64
     cookies_data = os.environ.get('YOUTUBE_COOKIES', '').strip()
     if cookies_data:
