@@ -103,6 +103,14 @@ def _resolve_uncached(identifier):
         'logger':QuietLog(),'socket_timeout':15,'retries':2,'extractor_retries':2,'cachedir':False,
         'extractor_args':{'youtube':{'player_client':['android','ios','web']}},
         'remote_components':set()}
+    import os
+    cookies_data = os.environ.get('YOUTUBE_COOKIES', '').strip()
+    if cookies_data:
+        cookie_path = '/tmp/youtube_cookies.txt'
+        try:
+            with open(cookie_path, 'w') as f: f.write(cookies_data)
+            options['cookiefile'] = cookie_path
+        except Exception: pass
     with YoutubeDL(options) as downloader:result=downloader.extract_info('https://www.youtube.com/watch?v='+identifier,download=False)
     url=result.get('url','')
     if not safe_media_url(url):raise ValueError('El proveedor no entregó una fuente de audio compatible.')
