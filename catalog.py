@@ -103,9 +103,14 @@ def _resolve_uncached(identifier):
         'logger':QuietLog(),'socket_timeout':15,'retries':2,'extractor_retries':2,'cachedir':False,
         'extractor_args':{'youtube':{'player_client':['android','ios','web']}},
         'remote_components':set()}
-    import os
+    import os, base64
     cookies_data = os.environ.get('YOUTUBE_COOKIES', '').strip()
     if cookies_data:
+        try:
+            if not cookies_data.startswith('# Netscape'):
+                decoded = base64.b64decode(cookies_data).decode('utf-8', errors='ignore')
+                if 'youtube.com' in decoded or '# Netscape' in decoded: cookies_data = decoded
+        except Exception: pass
         cookie_path = '/tmp/youtube_cookies.txt'
         try:
             with open(cookie_path, 'w') as f: f.write(cookies_data)
