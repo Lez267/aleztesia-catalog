@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: aleztesia-music
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: CATALOG_HOST
+        value: 0.0.0.0
