@@ -31,7 +31,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 return
-            return connect.reply(self, 200, {'ok': True, 'service': 'aleztesia-music', 'version': '0.7.5', 'commit': 'direct-audio-selection'})
+            has_cookies = bool(os.environ.get('YOUTUBE_COOKIES', '').strip())
+            cookie_len = len(os.environ.get('YOUTUBE_COOKIES', '').strip())
+            return connect.reply(self, 200, {'ok': True, 'service': 'aleztesia-music', 'version': '0.7.6', 'has_cookies': has_cookies, 'cookie_len': cookie_len})
         if not path.startswith('/api/music/'):
             return connect.reply(self, 404, {})
         if not path.startswith('/api/music/stream/'):
